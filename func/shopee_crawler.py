@@ -12,7 +12,8 @@ import requests
 import numpy as np
 import datetime, time
 import os
-from .data_process import browser, get_in4_item, get_json_data
+from .data_process import browser, get_json_data
+from .character_process import flat_dict as flat_dict
 from typing import List
 
 # Lấy thông tin sản phẩm theo từ khóa tìm kiếm
@@ -138,3 +139,28 @@ def get_items_from_industry (sub_facet: str, industry_list: List, page_number_to
                 pass
     list_item_by_menu = list_item_by_menu.reset_index().drop('index',axis=1)
     return list_item_by_menu
+
+# Get detail infor items
+def get_in4_item(shopid: int, itemid: int):
+  item_url = f"https://shopee.vn/api/v4/item/get?itemid={itemid}&shopid={shopid}"
+
+  payload={
+  }
+  headers = {
+    'authority': 'shopee.vn',
+    'accept': '*/*',
+    'accept-language': 'en-US,en;q=0.9,vi;q=0.8',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+    'x-api-source': 'pc',
+    'x-kl-ajax-request': 'Ajax_Request',
+    'x-requested-with': 'XMLHttpRequest',
+    'x-shopee-language': 'vi'
+  }
+
+  response = requests.request("GET", item_url, headers=headers, data=payload)
+
+  item_raw=response.json()
+  product_data=pd.json_normalize(item_raw['data'])
+  inf = product_data[['shopid','itemid','brand','price','stock','discount','historical_sold','sold','description','item_rating.rating_star','images','categories','shop_vouchers','global_sold']]
+  inf = pd.concat([inf,flat_dict(inf['categories'],'display_name')],axis=1)
+  return inf
