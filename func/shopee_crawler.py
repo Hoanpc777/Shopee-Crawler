@@ -17,17 +17,20 @@ from .character_process import flat_dict as flat_dict
 from typing import List
 
 # Lấy thông tin sản phẩm theo từ khóa tìm kiếm
-def search_get_items(url = f'https://shopee.vn/search?keyword=b%E1%BB%89m%20youli',page_number= 1):
-    driver = browser()
+def search_get_items(url = f'https://shopee.vn/search?keyword=b%E1%BB%89m%20youli',
+                     api = f'https://shopee.vn/api/v4/search/search_items?by=',
+                     page_number = 1):
+    # driver = browser()
     list_search = pd.DataFrame()
-    for i in range(page_number):
+    for i in list(range(page_number)):
         try:
             # url = f'https://shopee.vn/search?keyword=s%E1%BB%AFa%20r%E1%BB%ADa%20m%E1%BA%B7t%20nuskin&page={i}'
             url = f'{url}&page={i}'
+            driver = browser()
             driver.get(url)
             for request in driver.requests:
                 if request.response:
-                    if request.url.startswith('https://shopee.vn/api/v4/search/search_items?by=relevancy&keyword='):
+                    if request.url.startswith(api):
                         response = request.response
                         body = decode(response.body, response.headers.get('Content-Encoding', 'Identify'))
                         decoded_body = body.decode('utf8')
@@ -35,29 +38,12 @@ def search_get_items(url = f'https://shopee.vn/search?keyword=b%E1%BB%89m%20youl
                         r_list_search = pd.concat(pd.json_normalize(i['item_basic']) for i in json_data['items'])
                         r_list_search['page_number'] = i
                         list_search = pd.concat([list_search,r_list_search],axis=0)
-                        
+            driver.close()
         except:
             pass
     list_search = list_search.reset_index().drop('index',axis=1)
-
-    # In danh sách thông tin sản phẩm
-    list_item = list_search[['shopid','itemid','name','brand','page_number']].reset_index().drop('index',axis=1)
-    list_item.columns = ['shopid','itemid','f_name','brand','f_page_number']
-    # more details
-    input = list_item [['shopid','itemid']].drop_duplicates().reset_index().drop('index',axis=1)
-    dt = pd.DataFrame()
-    for i in range(len(input)):
-        shopid = input.iloc[[i]]['shopid'][i]
-        itemid = input.iloc[[i]]['itemid'][i]
-        try:
-            dt = pd.concat([dt,get_in4_item(shopid,itemid)],axis=0)
-        except:
-            pass
-    dt = dt.reset_index().drop('index',axis=1)
-    final = list_item.merge(dt, how = 'left', on = ['shopid','itemid'])
-    final = final.reset_index().drop('index',axis=1)
     # driver.close()
-    return final
+    return list_search
 
 # Lấy danh sách sản phẩm phải có mã giảm giá
 def search_only_voucher():
@@ -124,7 +110,7 @@ def get_items_from_industry (sub_facet: str, industry_list: List, page_number_to
     dict_menu= selected_industry.to_dict('records')
     list_item_by_menu = pd.DataFrame()
     for i in range(len(dict_menu)):
-        for page_number in range(page_number_to_crawl): #Lấy 4 trang đầu tiên tương ứng 240 sản phẩm
+        for page_number in list(range(page_number_to_crawl)): #Lấy 4 trang đầu tiên tương ứng 240 sản phẩm
             try:
                 parent_facetid = dict_menu[i]['parent_facetid']
                 facetid = dict_menu[i]['facetid']
