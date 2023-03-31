@@ -6,6 +6,8 @@ Learn how to crawling shopee.vn
 > 3. get_industry_data
 > 4. get_facet
 > 5. get_items_from_industry
+> 6. get_in4_item
+> 7. get_full_in4_item
 
 ## Chi tiết functions
 ### Xử lý dữ liệu: from data_process
@@ -18,4 +20,4 @@ Learn how to crawling shopee.vn
 - get_facet: Lấy danh sách mã ID ngành hàng con
 - get_items_from_industry: Lấy items theo ngành hàng thay vì từ khóa tìm kiếm
 - get_in4_item: Lấy thông tin chi tiết từng sản phẩm theo shopid và itemid
-
+- get_full_in4_item: Lấy tất cả các trường thông tin từng sản phẩm
